@@ -19,12 +19,12 @@ uname -m
 . /etc/os-release && echo "$PRETTY_NAME"
 ldd --version 2>/dev/null | head -1
 
-echo "===== 安装 Python 3.9 与编译工具 ====="
-dnf install -y python39 python39-devel gcc make tar gzip
-# python39-pip 在部分镜像源中缺失，失败不影响后续 ensurepip 兜底
-dnf install -y python39-pip || true
+echo "===== 安装 Python 3.8 与编译工具 ====="
+dnf install -y python38 python38-devel gcc make tar gzip
+# python38-pip 在部分镜像源中缺失，失败不影响后续 ensurepip 兜底
+dnf install -y python38-pip || true
 
-PY=python3.9
+PY=python3.8
 "$PY" --version
 
 # 若 pip 未随包提供，用 ensurepip 引导
@@ -57,7 +57,7 @@ cat > "$DIST_DIR/start.sh" << 'EOF'
 #  财务报销系统 - 启动脚本
 #
 #  用法：./start.sh
-#  前提：已安装 Python 3.9+（系统自带或通过包管理器安装）
+#  前提：已安装 Python 3.8+（系统自带或通过包管理器安装）
 # ==================================================================
 set -e
 
@@ -103,7 +103,7 @@ chmod +x start.sh
 ## 系统要求
 
 - 银河麒麟 V10 或 Ubuntu 20.04+ ARM64
-- Python 3.9+（系统自带或通过包管理器安装）
+- Python 3.8+（系统自带或通过包管理器安装）
 - glibc >= 2.28
 
 ## 功能说明
@@ -119,8 +119,8 @@ chmod +x start.sh
 - 解决：使用本构建产物（基于 glibc 2.28）
 
 ### 报错 "python: command not found"
-- 原因：系统未安装 Python 3.9+
-- 解决：`sudo dnf install python39` 或 `sudo apt install python3`
+- 原因：系统未安装 Python 3.8+
+- 解决：`sudo dnf install python38` 或 `sudo apt install python3.8`
 
 ### 中文文件名乱码
 - 原因：系统 locale 非 UTF-8
