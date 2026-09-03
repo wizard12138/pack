@@ -1,0 +1,49 @@
+name: Build Kylin ARM64 (QEMU fallback)
+
+# 备用方案：当仓库无法使用 GitHub 官方 ARM64 runner 时使用。
+# 背景：GitHub 托管的 Linux ARM64 runner（ubuntu-22.04-arm）对「公开仓库」可用；
+#       私有仓库在 Free 计划下可能不可用，此时用 QEMU 在 x86 runner 上模拟 aarch64 构建。
+# 代价：QEMU 软件模拟很慢，本作业通常需要 20–40 分钟。
+# 首选仍是 build-linux.yml 中的 build-kylin-arm64 作业（原生 ARM64，约 3–5 分钟）。
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-kylin-arm64-qemu:
+    name: Kylin ARM64 via QEMU (glibc 2.28)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 启用 QEMU 多架构支持
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: 在 aarch64 容器（Rocky Linux 8）中构建
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v "$GITHUB_WORKSPACE":/src \
+            -w /src \
+            -e PYTHONUTF8=1 \
+            rockylinux:8 \
+            bash scripts/build_in_container.sh
+
+      - name: 打包
+        run: |
+          cd dist
+          tar czf ../finance-kylin-arm64.tar.gz 财务报销系统
+          cd ..
+          ls -lh finance-kylin-arm64.tar.gz
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-kylin-arm64
+          path: finance-kylin-arm64.tar.gz
+          if-no-files-found: error
