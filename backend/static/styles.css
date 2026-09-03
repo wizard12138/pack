@@ -1,0 +1,768 @@
+﻿/*
+ * 财务报销系统 - 清爽现代风格样式
+ * 基于苹果设计库 tokens（dl_builtin_apple）
+ * 完全本地化，确保离线可用
+ */
+
+/* ===== Apple Design Tokens ===== */
+:root {
+  /* Primitive palette */
+  --brand-50: #e8f2ff;
+  --brand-100: #cfe5ff;
+  --brand-200: #9fcbff;
+  --brand-300: #66abff;
+  --brand-400: #2e8dff;
+  --brand-500: #007aff;
+  --brand-600: #0064d6;
+  --brand-700: #004fad;
+  --brand-800: #003b82;
+  --brand-900: #00275a;
+
+  --background-50: #ffffff;
+  --background-100: #f7f7fa;
+  --background-200: #f2f2f7;
+  --background-300: #e5e5ea;
+  --background-400: #d1d1d6;
+  --background-500: #aeaeb2;
+  --background-600: #8e8e93;
+  --background-700: #3a3a3c;
+  --background-800: #1c1c1e;
+  --background-900: #000000;
+
+  --text-50: #f5f5f7;
+  --text-100: #e3e3e8;
+  --text-200: #c7c7cc;
+  --text-300: #aeaeb2;
+  --text-400: #8e8e93;
+  --text-500: #6e6e73;
+  --text-600: #48484a;
+  --text-700: #3c3c43;
+  --text-800: #1d1d1f;
+  --text-900: #000000;
+
+  /* Semantic roles */
+  --background: var(--background-50);
+  --foreground: var(--text-800);
+  --card: var(--background-50);
+  --card-foreground: var(--text-800);
+  --primary: var(--brand-500);
+  --primary-foreground: var(--background-50);
+  --secondary: var(--background-200);
+  --secondary-foreground: var(--text-800);
+  --muted: var(--background-200);
+  --muted-foreground: var(--text-500);
+  --accent: var(--background-100);
+  --accent-foreground: var(--text-800);
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  --border: var(--background-300);
+  --input: var(--background-400);
+  --ring: var(--brand-500);
+
+  /* Typography */
+  --font-sans: "DM Sans", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "WenQuanYi Micro Hei", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+
+  /* Radius */
+  --radius: 1.2rem;
+  --radius-sm: 0.75rem;
+  --radius-xs: 0.5rem;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px -8px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.03);
+
+  /* Spacing */
+  --spacing: 0.25rem;
+}
+
+/* ===== Reset & Base ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans) !important;
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--background-100);
+  color: var(--foreground);
+  padding: 24px;
+}
+
+/* ===== Layout ===== */
+.header {
+  max-width: 960px;
+  margin: 0 auto 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.header .select-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.header label {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.header select {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.header select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ===== Cards ===== */
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.form-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.form-card-header {
+  background: var(--background-100);
+  color: var(--foreground);
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-card-header .form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-card-header input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.form-card-body {
+  padding: 24px;
+  display: none;
+}
+
+.form-card-body.active {
+  display: block;
+}
+
+.form-card:first-child .form-card-body {
+  padding: 16px 20px;
+}
+
+/* ===== Fields ===== */
+.field-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.field-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  margin-bottom: 6px;
+}
+
+.field-group input[type="text"],
+.field-group input[type="number"],
+.field-group input[type="date"],
+.field-group textarea,
+.field-group select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px !important;
+  border: 1px solid var(--input) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--background) !important;
+  color: var(--foreground);
+  font-family: var(--font-sans) !important;
+  font-size: 15px !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.field-group input[type="text"]:focus-visible,
+.field-group input[type="number"]:focus-visible,
+.field-group input[type="date"]:focus-visible,
+.field-group textarea:focus-visible,
+.field-group select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-color: var(--ring) !important;
+}
+
+.field-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.field-group input[readonly],
+.field-group input:disabled,
+.field-group textarea[readonly],
+.field-group textarea:disabled,
+.field-group select:disabled {
+  background: var(--background-100) !important;
+  color: var(--muted-foreground);
+  cursor: not-allowed;
+}
+
+.field-group .inline-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.field-group .inline-group input,
+.field-group .inline-group select {
+  width: auto;
+}
+
+.field-group .inline-group span {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.field-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.field-row .field-group {
+  flex: 1;
+  min-width: 180px;
+  margin-bottom: 0;
+}
+
+/* ===== Person Card ===== */
+.person-card {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.person-card .person-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.person-card .btn-del {
+  height: 32px;
+  padding: 0 12px;
+  background: #ffecea;
+  color: var(--destructive);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 0.18s ease;
+}
+
+.person-card .btn-del:hover {
+  background: #ffd6d3;
+}
+
+/* ===== Buttons ===== */
+.btn-add,
+.btn-download,
+.btn-tiepiao,
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+}
+
+.btn-add {
+  height: 36px;
+  padding: 0 16px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-size: 14px;
+}
+
+.btn-add:hover {
+  background: var(--background-300);
+}
+
+.btn-download {
+  height: 48px;
+  padding: 0 28px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-download:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+.btn-tiepiao {
+  height: 48px;
+  padding: 0 28px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  font-size: 16px;
+}
+
+.btn-tiepiao:hover {
+  background: var(--background-300);
+}
+
+.btn-print {
+  height: 40px;
+  padding: 0 20px;
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.btn-print:hover {
+  background: var(--background-100);
+}
+
+/* ===== Tags & Hints ===== */
+.date-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-50);
+  color: var(--brand-700);
+  border: 1px solid var(--brand-100);
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 3px;
+}
+
+.date-tag .del {
+  cursor: pointer;
+  color: var(--destructive);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.date-tag .del:hover {
+  color: #d92820;
+}
+
+.tag-hint {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+}
+
+/* ===== Checkbox & Radio Groups ===== */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.checkbox-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  transition: background-color 0.15s ease;
+}
+
+.checkbox-group label:hover {
+  background: var(--background-100);
+}
+
+.checkbox-group input[type="checkbox"],
+.checkbox-group input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ===== Section Title ===== */
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 24px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 40px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* ===== Tables ===== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: var(--background);
+}
+
+table thead {
+  background: var(--background-100);
+}
+
+table th,
+table td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+table th {
+  font-weight: 600;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+
+table td input[type="number"],
+table td input[type="text"] {
+  width: 80px;
+  text-align: center;
+  padding: 6px 8px !important;
+  min-height: 36px;
+}
+
+table tbody tr:nth-child(even) {
+  background: var(--background-100);
+}
+
+/* ===== Dynamic Table Overrides ===== */
+#zhusu_table_body td {
+  background: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  padding: 10px 12px !important;
+}
+
+#zhusu_table_body tr:nth-child(even) td {
+  background: var(--background-100) !important;
+}
+
+#zhusu_table_body input[type="number"],
+#zhusu_table_body input[type="text"] {
+  width: 80px !important;
+  text-align: center !important;
+  padding: 6px 8px !important;
+  min-height: 36px !important;
+}
+/* ===== Actions ===== */
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 32px 0;
+  flex-wrap: wrap;
+}
+
+/* ===== Utility ===== */
+.hidden {
+  display: none !important;
+}
+
+/* ===== Huo Slot ===== */
+.huo-slot {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin: 10px 0;
+  background: var(--background);
+}
+
+.huo-slot > div:first-child {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--foreground);
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .header,
+  .actions,
+  .btn-add,
+  .btn-del,
+  .form-card-header,
+  .date-tag .del {
+    display: none !important;
+  }
+
+  .form-card-body {
+    display: block !important;
+  }
+
+  .form-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    margin-bottom: 16px;
+  }
+
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+
+  .person-card {
+    background: #fafafa !important;
+    border-color: #ddd !important;
+  }
+
+  input,
+  select,
+  textarea {
+    border-color: #ccc !important;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  body {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 20px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .form-card-body {
+    padding: 16px;
+  }
+
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .field-row .field-group {
+    min-width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  table th,
+  table td {
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+
+  table td input[type="number"],
+  table td input[type="text"] {
+    width: 60px;
+    padding: 4px 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    border-radius: var(--radius-sm);
+  }
+
+  .form-card {
+    border-radius: var(--radius-sm);
+  }
+
+  .form-card-header {
+    padding: 14px 16px;
+  }
+}
+
+/* ===== Negative number tip ===== */
+.neg-tip {
+  position: absolute;
+  left: 0;
+  top: -28px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: var(--shadow-md);
+  animation: negTipIn 0.2s ease;
+}
+
+@keyframes negTipIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Step Navigation ===== */
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-prev,
+.btn-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-prev {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.btn-prev:hover {
+  background: var(--background-300);
+}
+
+.btn-next {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.btn-next:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+/* 隐藏非当前步骤的表单卡片 */
+.form-card.form-step-hidden {
+  display: none;
+}
