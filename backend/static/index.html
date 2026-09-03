@@ -1,0 +1,1266 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>财务报销系统</title>
+<link rel="stylesheet" href="styles.css">
+<!-- 后端架构：Excel 生成由后端 Python 处理 -->
+
+</head>
+<body>
+
+<div class="header">
+  <h1>财务报销系统</h1>
+  <div class="select-group">
+    <label>报销类型：</label>
+    <select id="reimburseType"><option value="chuchai">差旅费报销</option><option value="other" disabled="">其他报销（待添加）</option></select>
+  </div>
+</div>
+
+<div class="form-container" id="app">
+  <!-- 选择表格 -->
+  <div class="form-card">
+    <div class="form-card-header">选择表格</div>
+    <div class="form-card-body active">
+      <div class="checkbox-group">
+        <label style="display:none"><input type="checkbox" id="cb_yingong" value="yingong" checked onchange="toggleForm('yingong')"> 因公出差审批单</label>
+        <label style="display:none"><input type="checkbox" id="cb_huo" value="huo" checked onchange="toggleForm('huo')"> 伙食补助费申请表</label>
+        <label><input type="checkbox" id="cb_chao" value="chao" onchange="toggleForm('chao');updateHuoNextButton()"> 超标准乘坐交通工具审批单</label>
+        <label style="display:none"><input type="checkbox" id="cb_baoxiao" value="baoxiao" checked onchange="toggleForm('baoxiao')"> 差旅费报销凭证</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- 因公出差审批单 -->
+  <div class="form-card" id="form-yingong">
+    <div class="form-card-header">因公出差审批单</div>
+    <div class="form-card-body active" id="body-yingong">
+      <div class="field-row">
+        <div class="field-group" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-end">
+          <label style="margin-bottom:0;white-space:nowrap;font-weight:bold;margin-right:8px">报批日期</label>
+          <div class="inline-group"><div id="yin_time_group"><select id="yin_year" onchange="syncAllDates('yin_time_group')" class="sel-year"><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026" selected="">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option><option value="2029">2029年</option><option value="2030">2030年</option><option value="2031">2031年</option></select><select id="yin_month" onchange="syncAllDates('yin_time_group')" class="sel-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8" selected="">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select><select id="yin_day" onchange="syncAllDates('yin_time_group')" class="sel-day"><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option><option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option><option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option><option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option><option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option><option value="31" selected="">31日</option></select></div><label style="font-weight:normal;font-size:13px;cursor:pointer;margin-left:4px"><input type="checkbox" id="sync_yin"> 同步</label></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>单位</label><input type="text" id="yin_danwei" placeholder="如：X部X科" onchange="syncDanwei()" oninput="syncDanwei()"></div>
+        <div class="field-group"><label>出差事由</label><input type="text" id="yin_shiyou"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group" id="arrive_group_container" style="flex:1">
+          <label>到达单位/到达地点</label>
+          <div id="arrive_group_list"></div>
+          <button type="button" onclick="addArriveGroup()" style="margin-top:6px;padding:4px 12px;font-size:12px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer">+ 添加</button>
+        </div>
+      </div>
+      <div class="field-group"><label>起止时间</label>
+        <div class="inline-group">
+          <span>从</span><input type="date" id="yin_qizhi_from" style="width:160px" onchange="syncQizhiTime()">
+          <span>至</span><input type="date" id="yin_qizhi_to" style="width:160px" onchange="syncQizhiTime()">
+          <span style="display:none" id="yin_qizhi_display"></span>
+        </div>
+      </div>
+      <div class="field-group"><label>出行方式</label>
+        <div class="checkbox-group" id="yin_chuxing_group">
+	          <label><input type="checkbox" id="chuxing_fei" value="飞机" checked="" onchange="syncChuxing()"> 飞机</label>
+	          <label><input type="checkbox" id="chuxing_gaotie" value="高铁/动车" onchange="syncChuxing()"> 高铁/动车</label>
+	          <label><input type="checkbox" id="chuxing_putong" value="普通列车" onchange="syncChuxing()"> 普通列车</label>
+	          <label><input type="checkbox" id="chuxing_changtu" value="长途汽车" onchange="syncChuxing()"> 长途汽车</label>
+	          <label><input type="checkbox" id="chuxing_lunchuan" value="轮船" onchange="syncChuxing()"> 轮船</label>
+	          <label><input type="checkbox" id="chuxing_qita" value="其他" onchange="syncChuxing()"> 其他</label>
+	        </div>
+      </div>
+      <div class="section-title">人员信息</div>
+      <div id="yin_people_container"><div class="person-card"><div class="person-title">人员 1</div><div class="field-row"><div class="field-group"><label>姓名</label><input type="text" id="yin_name1" value="" onchange="syncYinName(1)" placeholder="姓名"></div><div class="field-group"><label>部职别</label><input type="text" id="yin_buzhibie1" value="" placeholder="部职别" onchange="renderBaoSelects()"></div><div class="field-group"><label>职级</label><input type="text" id="yin_zhiji1" value="" placeholder="职级"></div><div class="field-group"><label>是否随员</label><select id="yin_sui_gou1"><option value="否" selected="">否</option><option value="是">是</option></select></div></div></div></div>
+      <button class="btn-add" onclick="addYinPerson()">+ 添加人员</button>
+      <div class="field-group" style="margin-top:12px;display:none"><label>因公出差领导审批</label><input type="text" id="yin_lingdao_shenpi"></div>
+      <div class="field-group"><label>备注</label><textarea id="yin_beizhu" rows="3"></textarea></div>
+      <div class="step-nav"><div></div><button class="btn-next" onclick="goNext()">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- 差旅费报销凭证 -->
+  <div class="form-card" id="form-baoxiao">
+    <div class="form-card-header">差旅费报销凭证</div>
+    <div class="form-card-body active" id="body-baoxiao">
+      <div class="field-row">
+        <div class="field-group" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-end">
+          <label style="margin-bottom:0;white-space:nowrap;font-weight:bold;margin-right:8px">填报日期</label>
+          <div class="inline-group"><div id="bao_time_group"><select id="bao_year" onchange="syncAllDates('bao_time_group')" class="sel-year"><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026" selected="">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option><option value="2029">2029年</option><option value="2030">2030年</option><option value="2031">2031年</option></select><select id="bao_month" onchange="syncAllDates('bao_time_group')" class="sel-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8" selected="">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select><select id="bao_day" onchange="syncAllDates('bao_time_group')" class="sel-day"><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option><option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option><option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option><option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option><option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option><option value="31" selected="">31日</option></select></div><label style="font-weight:normal;font-size:13px;cursor:pointer;margin-left:4px"><input type="checkbox" id="sync_bao" checked=""> 同步</label></div></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>单位</label><input type="text" id="bao_danwei" onchange="syncDanwei()" oninput="syncDanwei()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>姓名</label><select id="bao_name" onchange="onBaoNameChange()"><option value="">请选择</option></select></div>
+        <div class="field-group"><label>同行人数</label><input type="number" id="bao_count" min="0"></div>
+        <div class="field-group"><label>部职别</label><select id="bao_buzhibie" onchange="this.dataset.manual='1'"><option value="">请选择</option></select></div>
+      </div>
+      <div class="field-group"><label>到达地点</label><input type="text" id="bao_arrive_point" onfocus="this.dataset.manual='1'"></div>
+      <div class="field-group"><label>出差日期</label>
+        <div class="inline-group">
+          <span>从</span><input type="date" id="bao_sum_from" style="width:160px" onchange="syncSumTime();this.dataset.manual='1'">
+          <span>至</span><input type="date" id="bao_sum_to" style="width:160px" onchange="syncSumTime();this.dataset.manual='1'">
+          <span id="bao_sum_display"></span>
+        </div>
+      </div>
+
+      <div class="section-title">交通费</div>
+      <div class="field-row">
+        <div class="field-group"><label>车、船票 单据张数</label><input type="number" id="bao_carship_count" min="0" onchange="syncBaoxiaoSums()"></div>
+        <div class="field-group"><label>车、船票 申报金额</label><input type="number" id="bao_carship_value" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>飞机票 单据张数</label><input type="number" id="bao_airport_count" min="0" onchange="syncBaoxiaoSums()"></div>
+        <div class="field-group"><label>飞机票 申报金额</label><input type="number" id="bao_airport_value" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>订（退、改签）票及交通保险费 单据张数</label><input type="number" id="bao_tuigai_count" min="0" onchange="syncBaoxiaoSums()"></div>
+        <div class="field-group"><label>订（退、改签）票及交通保险费 申报金额</label><input type="number" id="bao_tuigai_value" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>小计 单据张数</label><input type="text" id="bao_count_sum" readonly=""></div>
+        <div class="field-group"><label>小计 申报金额</label><input type="text" id="bao_value_sum" readonly=""></div>
+      </div>
+
+      <div class="section-title">市内交通费</div>
+      <div class="field-row">
+        <div class="field-group"><label>单据张数</label><input type="number" id="bao_shinei_count" min="0"></div>
+        <div class="field-group"><label>申报金额</label><input type="number" id="bao_shinei_sum" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+
+      <div class="section-title">行李托运费</div>
+      <div class="field-row">
+        <div class="field-group"><label>单据张数</label><input type="number" id="bao_tuoyun_count" min="0"></div>
+        <div class="field-group"><label>申报金额</label><input type="number" id="bao_tuoyun_sum" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+
+      <div class="section-title">凭据报销伙食费</div>
+      <div class="field-row">
+        <div class="field-group"><label>单据张数</label><input type="number" id="bao_food_count" min="0"></div>
+        <div class="field-group"><label>申报金额</label><input type="number" id="bao_food_sum" min="0" onchange="syncBaoxiaoSums()"></div>
+      </div>
+
+      <div class="section-title">住宿费</div>
+      <table>
+        <thead><tr>
+          <th>级别</th>
+          <th>人数</th>
+          <th>天数</th>
+          <th>标准</th>
+          <th>申报金额</th>
+          </tr></thead>
+        <tbody id="zhusu_table_body"></tbody>
+      </table>
+
+      <div class="section-title">计发伙食补助</div>
+      <div class="field-row">
+        <div class="field-group"><label>人数</label><input type="number" id="bao_ji_p" min="0" onchange="syncJiShen()"></div>
+        <div class="field-group"><label>天数</label><input type="number" id="bao_ji_d" min="0" onchange="syncJiShen()"></div>
+        <div class="field-group"><label>标准</label><input type="number" id="bao_ji_s" min="0" value="100" onchange="syncJiShen()"></div>
+        <div class="field-group"><label>计发金额</label><input type="number" id="bao_ji_shen" min="0" step="0.01" onchange="syncBaoxiaoSums()"></div>
+      </div>
+
+      <div class="section-title">其他</div>
+      <div class="field-row">
+        <div class="field-group"><label>预借款（¥）</label><input type="number" id="bao_yujiekuan" min="0" step="0.01"></div>
+        <div class="field-group" style="flex:0.6"><label>申报金额（输入数字，自动转大写）</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" id="bao_shenbao_sum" min="0" step="0.01" style="width:50%" onchange="this.dataset.manual='1';syncShenbaoHezhun()">
+            <span id="bao_shenbao_display"></span>
+          </div>
+        </div>
+      </div>
+    <div class="step-nav"><button class="btn-prev" onclick="goPrev()">← 上一步</button><button class="btn-next" onclick="goNext()">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- 伙食补助费申请表 -->
+  <div class="form-card" id="form-huo">
+    <div class="form-card-header">伙食补助费申请表</div>
+    <div class="form-card-body active" id="body-huo">
+      <div class="field-row">
+        <div class="field-group" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-end">
+          <label style="margin-bottom:0;white-space:nowrap;font-weight:bold;margin-right:8px">填报日期</label>
+          <div class="inline-group"><div id="huo_time_group"><select id="huo_year" onchange="syncAllDates('huo_time_group')" class="sel-year"><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026" selected="">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option><option value="2029">2029年</option><option value="2030">2030年</option><option value="2031">2031年</option></select><select id="huo_month" onchange="syncAllDates('huo_time_group')" class="sel-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8" selected="">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select><select id="huo_day" onchange="syncAllDates('huo_time_group')" class="sel-day"><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option><option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option><option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option><option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option><option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option><option value="31" selected="">31日</option></select></div><label style="font-weight:normal;font-size:13px;cursor:pointer;margin-left:4px"><input type="checkbox" id="sync_huo" checked=""> 同步</label></div></div>
+      </div>
+      <div class="section-title">人员信息</div>
+      <div id="huo_people_container"><div class="person-card"><div class="person-title">人员 1</div><div class="field-row"><div class="field-group"><label>姓名</label><input type="text" id="huo_name1" value="" placeholder="姓名"></div><div class="field-group"><label>标准（默认100）</label><input type="number" id="huo_standr1" value="100" min="0" onchange="syncHuoShen(1)"></div></div><div class="field-group"><label>时间</label><div class="inline-group" style="margin-bottom:6px"><label style="font-weight:normal;font-size:13px;cursor:pointer"><input type="radio" name="huo_mode1" value="continuous" checked="" onchange="switchHuoMode(1,'continuous')"> 连续日</label><label style="font-weight:normal;font-size:13px;cursor:pointer"><input type="radio" name="huo_mode1" value="individual" onchange="switchHuoMode(1,'individual')"> 单独日</label></div><div id="huo_continuous_group1"><div class="inline-group"><span style="font-size:13px">从</span><input type="date" id="huo_continuous_start1" style="width:160px" value="" onchange="setHuoContinuous(1)"><span style="font-size:13px">至</span><input type="date" id="huo_continuous_end1" style="width:160px" value="" onchange="setHuoContinuous(1)"></div></div><div id="huo_individual_group1" class="hidden"><div class="inline-group"><input type="date" id="huo_individual_input1" style="width:160px"><button class="btn-add huo-add-individual" data-idx="1" style="padding:4px 12px;font-size:13px">+ 添加</button></div><div id="huo_individual_tags1"></div></div></div><div class="field-row"><div class="field-group"><label>天数</label><input type="number" id="huo_day1" value="" min="0" onchange="syncHuoShen(1)"></div><div class="field-group"><label>申报金额</label><input type="number" id="huo_shen1" value="" min="0"></div><div class="field-group"><label>备注</label><input type="text" id="huo_bei1" value=""></div></div></div></div>
+	      <button class="btn-add" onclick="addHuoPerson()">+ 添加人员</button>
+      <div class="step-nav"><button class="btn-prev" onclick="goPrev()">← 上一步</button><button class="btn-next" id="btn-huo-next" onclick="goNext()" style="display:none">下一步 →</button></div>
+    </div>
+  </div>
+
+  <!-- 超标准乘坐交通工具审批单 -->
+  <div class="form-card" id="form-chao">
+    <div class="form-card-header">超标准乘坐交通工具审批单</div>
+    <div class="form-card-body" id="body-chao">
+      <div class="field-row">
+        <div class="field-group" style="display:flex;flex-direction:row;align-items:center;justify-content:flex-end">
+          <label style="margin-bottom:0;white-space:nowrap;font-weight:bold;margin-right:8px">填报日期</label>
+          <div class="inline-group"><div id="chao_time_group"><select id="chao_year" onchange="syncAllDates('chao_time_group')" class="sel-year"><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026" selected="">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option><option value="2029">2029年</option><option value="2030">2030年</option><option value="2031">2031年</option></select><select id="chao_month" onchange="syncAllDates('chao_time_group')" class="sel-month"><option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8" selected="">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option></select><select id="chao_day" onchange="syncAllDates('chao_time_group')" class="sel-day"><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option><option value="8">8日</option><option value="9">9日</option><option value="10">10日</option><option value="11">11日</option><option value="12">12日</option><option value="13">13日</option><option value="14">14日</option><option value="15">15日</option><option value="16">16日</option><option value="17">17日</option><option value="18">18日</option><option value="19">19日</option><option value="20">20日</option><option value="21">21日</option><option value="22">22日</option><option value="23">23日</option><option value="24">24日</option><option value="25">25日</option><option value="26">26日</option><option value="27">27日</option><option value="28">28日</option><option value="29">29日</option><option value="30">30日</option><option value="31" selected="">31日</option></select></div><label style="font-weight:normal;font-size:13px;cursor:pointer;margin-left:4px"><input type="checkbox" id="sync_chao" checked=""> 同步</label></div></div>
+      </div>
+      <div class="section-title">人员信息（每人生成一张审批单）</div>
+      <div id="chao_people_container"><div class="person-card"><div class="person-title">人员 1</div><div class="field-row"><div class="field-group"><label>姓名</label><input type="text" id="chao_name1" value="" onchange="syncChaoDefaults(1)" placeholder="姓名"></div><div class="field-group"><label>职级</label><input type="text" id="chao_zhiji1" value="" placeholder="职级"></div><div class="field-group"><label>部别</label><input type="text" id="chao_bubie1" value="" placeholder="部别"></div></div><div class="field-group"><label>何时到何地</label><input type="text" id="chao_time_to_point1"></div><div class="field-row"><div class="field-group"><label>应当乘坐交通工具席位</label><input type="text" id="chao_yingcheng1"></div><div class="field-group"><label>实际乘坐交通工具席位</label><input type="text" id="chao_shicheng1"></div></div><div class="field-group"><label>超标准乘坐交通工具原因</label><textarea id="chao_yuanyin1" rows="3"></textarea></div><div class="field-group"><label>备注</label><textarea id="chao_bei1" rows="2"></textarea></div></div></div>
+      <button class="btn-add" onclick="addChaoPerson()">+ 添加人员</button>
+      <div class="step-nav"><button class="btn-prev" onclick="goPrev()">← 上一步</button><div></div></div>
+    </div>
+  </div>
+
+
+  <div class="actions">
+    <button class="btn-tiepiao" onclick="saveFormState();window.location.href='贴票助手.html'">贴票</button>
+    <button class="btn-download" onclick="downloadExcel()">下载 Excel</button>
+    <button class="btn-print" onclick="window.print()">打印</button>
+  </div>
+</div>
+
+<script>
+// ========== 工具函数 ==========
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+// [后端处理] numToChineseShenbao、getChuxingText、getQizhiTimeText、getSumTimeText 已移至后端 Python 处理
+
+// ========== 日期选择器渲染 ==========
+function renderDateSelect(containerId, year, month, day, onchange) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  // 从 containerId 提取前缀，如 "yin_time_group" → "yin"
+  var prefix = containerId.replace('_time_group', '');
+  var html = '<select id="' + prefix + '_year" onchange="' + onchange + '" class="sel-year">';
+  for (var y = 2016; y <= 2031; y++) {
+    html += '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>' + y + '年</option>';
+  }
+  html += '</select><select id="' + prefix + '_month" onchange="' + onchange + '" class="sel-month">';
+  for (var m = 1; m <= 12; m++) {
+    html += '<option value="' + m + '"' + (m === month ? ' selected' : '') + '>' + m + '月</option>';
+  }
+  html += '</select><select id="' + prefix + '_day" onchange="' + onchange + '" class="sel-day">';
+  for (var d = 1; d <= 31; d++) {
+    html += '<option value="' + d + '"' + (d === day ? ' selected' : '') + '>' + d + '日</option>';
+  }
+  html += '</select>';
+  container.innerHTML = html;
+}
+
+function getDateFromSelects(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return { year: 2026, month: 1, day: 1 };
+  var sels = container.querySelectorAll('select');
+  return { year: parseInt(sels[0].value), month: parseInt(sels[1].value), day: parseInt(sels[2].value) };
+}
+
+// ========== 日期同步（四表互相同步，需勾选同步开关） ==========
+function syncAllDates(fromContainerId) {
+  var map = { yin_time_group: 'sync_yin', huo_time_group: 'sync_huo', chao_time_group: 'sync_chao', bao_time_group: 'sync_bao' };
+  // 源表单的同步未勾选，则不触发任何同步
+  var srcCb = document.getElementById(map[fromContainerId]);
+  if (!srcCb || !srcCb.checked) return;
+  var d = getDateFromSelects(fromContainerId);
+  Object.keys(map).forEach(function(id) {
+    if (id === fromContainerId) return;
+    var cb = document.getElementById(map[id]);
+    if (!cb || !cb.checked) return;
+    var container = document.getElementById(id);
+    if (!container) return;
+    var sels = container.querySelectorAll('select');
+    if (sels.length === 3) {
+      sels[0].value = d.year;
+      sels[1].value = d.month;
+      sels[2].value = d.day;
+    }
+  });
+}
+
+// ========== 表单开关 ==========
+function toggleForm(id) {
+  var body = document.getElementById('body-' + id);
+  if (!body) return;
+  var cb = document.querySelector('input[type=checkbox][value="' + id + '"]');
+  if (cb && cb.checked) {
+    body.classList.add('active');
+  } else {
+    body.classList.remove('active');
+  }
+}
+
+// ========== 分步导航 ==========
+var STEPS = ['yingong', 'baoxiao', 'huo', 'chao'];
+var currentStep = 0;
+
+function showStep(stepIndex) {
+  var stepId = STEPS[stepIndex];
+  // 隐藏所有表单卡片
+  STEPS.forEach(function(id) {
+    var card = document.getElementById('form-' + id);
+    if (card) card.classList.add('form-step-hidden');
+  });
+  // 显示当前步骤表单
+  var currentCard = document.getElementById('form-' + stepId);
+  if (currentCard) currentCard.classList.remove('form-step-hidden');
+
+  currentStep = stepIndex;
+  localStorage.setItem('financeCurrentStep', String(stepIndex));
+}
+
+function goNext() {
+  var nextStep = currentStep + 1;
+  if (nextStep >= STEPS.length) return;
+  // 如果当前是 huo（index 2），且 chao 未勾选，则无更多步骤
+  if (STEPS[currentStep] === 'huo') {
+    var chaoCb = document.getElementById('cb_chao');
+    if (!chaoCb || !chaoCb.checked) {
+      return;
+    }
+  }
+  saveFormState();
+  showStep(nextStep);
+}
+
+function goPrev() {
+  var prevStep = currentStep - 1;
+  if (prevStep < 0) return;
+  saveFormState();
+  showStep(prevStep);
+}
+
+function updateHuoNextButton() {
+  var chaoCb = document.getElementById('cb_chao');
+  var huoNextBtn = document.getElementById('btn-huo-next');
+  if (huoNextBtn) {
+    huoNextBtn.style.display = (chaoCb && chaoCb.checked) ? '' : 'none';
+  }
+}
+
+// ========== 因公出差审批单 ==========
+var yinPersonCount = 1;
+function getYinPersonData() {
+  var data = [];
+  for (var i = 0; i < yinPersonCount; i++) {
+    var idx = i + 1;
+    data.push({
+      name: document.getElementById('yin_name' + idx)?.value || '',
+      buzhibie: document.getElementById('yin_buzhibie' + idx)?.value || '',
+      zhiji: document.getElementById('yin_zhiji' + idx)?.value || '',
+      sui_gou: document.getElementById('yin_sui_gou' + idx)?.value || '否'
+    });
+  }
+  return data;
+}
+function renderYinPeople(savedData) {
+  var container = document.getElementById('yin_people_container');
+  if (!savedData) savedData = getYinPersonData();
+  // Ensure savedData has enough entries
+  while (savedData.length < yinPersonCount) savedData.push({ name: '', buzhibie: '', zhiji: '', sui_gou: '否' });
+  var html = '';
+  for (var i = 0; i < yinPersonCount; i++) {
+    var idx = i + 1;
+    var d = savedData[i] || { name: '', buzhibie: '', zhiji: '', sui_gou: '否' };
+    html += '<div class="person-card">';
+    html += '<div class="person-title">人员 ' + idx + (idx > 1 ? '<button class="btn-del" onclick="delYinPerson(' + i + ')">删除</button>' : '') + '</div>';
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>姓名</label><input type="text" id="yin_name' + idx + '" value="' + d.name.replace(/"/g,'&quot;') + '" onchange="syncYinName(' + idx + ')" placeholder="姓名"></div>';
+    html += '<div class="field-group"><label>部职别</label><input type="text" id="yin_buzhibie' + idx + '" value="' + d.buzhibie.replace(/"/g,'&quot;') + '" placeholder="部职别" onchange="renderBaoSelects()"></div>';
+    html += '<div class="field-group"><label>职级</label><input type="text" id="yin_zhiji' + idx + '" value="' + d.zhiji.replace(/"/g,'&quot;') + '" placeholder="职级"></div>';
+    html += '<div class="field-group"><label>是否随员</label><select id="yin_sui_gou' + idx + '"><option value="否"' + (d.sui_gou === '否' ? ' selected' : '') + '>否</option><option value="是"' + (d.sui_gou === '是' ? ' selected' : '') + '>是</option></select></div>';
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+}
+function addYinPerson() {
+  if (yinPersonCount >= 30) { alert('最多30人'); return; }
+  var saved = getYinPersonData();
+  yinPersonCount++;
+  renderYinPeople(saved);
+  renderBaoSelects();
+  syncHuoAndChaoPeople();
+}
+function delYinPerson(idx) {
+  var saved = getYinPersonData();
+  saved.splice(idx, 1);
+  yinPersonCount--;
+  renderYinPeople(saved);
+  renderBaoSelects();
+  syncHuoAndChaoPeople();
+}
+function syncYinName(idx) {
+  // Sync with huo and chao forms - just update values directly
+  var name = document.getElementById('yin_name' + idx)?.value || '';
+  var zhiji = document.getElementById('yin_zhiji' + idx)?.value || '';
+  var buzhibie = document.getElementById('yin_buzhibie' + idx)?.value || '';
+
+  var huoName = document.getElementById('huo_name' + idx);
+  if (huoName) huoName.value = name;
+
+  var chaoName = document.getElementById('chao_name' + idx);
+  if (chaoName) chaoName.value = name;
+
+  var chaoZhiji = document.getElementById('chao_zhiji' + idx);
+  if (chaoZhiji && !chaoZhiji.dataset.manual) chaoZhiji.value = zhiji;
+
+  var chaoBuzhibie = document.getElementById('chao_buzhibie' + idx);
+  if (chaoBuzhibie && !chaoBuzhibie.dataset.manual) chaoBuzhibie.value = buzhibie;
+
+  var chaoBubie = document.getElementById('chao_bubie' + idx);
+  if (chaoBubie && !chaoBubie.dataset.manual) chaoBubie.value = buzhibie;
+
+  // Sync bao负责人 if idx === 1
+  if (idx === 1) {
+    renderBaoSelects();
+  }
+}
+
+// ========== 伙食补助费申请表 ==========
+var huoPersonCount = 1;
+var huoTimeData = { 1: { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'individual', start: null, end: null, dates: [] } } };
+
+function getHuoPersonData() {
+  var data = [];
+  for (var i = 0; i < huoPersonCount; i++) {
+    var idx = i + 1;
+    data.push({
+      name: document.getElementById('huo_name' + idx)?.value || '',
+      standr: document.getElementById('huo_standr' + idx)?.value || '100'
+    });
+  }
+  return data;
+}
+
+function renderHuoPeople(savedData) {
+  var container = document.getElementById('huo_people_container');
+  if (!savedData) savedData = getHuoPersonData();
+  while (savedData.length < huoPersonCount) savedData.push({ name: '', standr: '100' });
+  var html = '';
+  for (var i = 0; i < huoPersonCount; i++) {
+    var idx = i + 1;
+    var yinName = document.getElementById('yin_name' + idx);
+    var d = savedData[i] || { name: '', standr: '100' };
+    var defaultName = yinName ? yinName.value : d.name;
+    var td = huoTimeData[idx] || { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'individual', start: null, end: null, dates: [] } };
+    if (!td.zhqin) td.zhqin = { mode: 'continuous', start: null, end: null, dates: [] };
+    if (!td.tuzhong) td.tuzhong = { mode: 'individual', start: null, end: null, dates: [] };
+
+    html += '<div class="person-card">';
+    html += '<div class="person-title">人员 ' + idx + (idx > 1 ? '<button class="btn-del" onclick="delHuoPerson(' + i + ')">删除</button>' : '') + '</div>';
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>姓名</label><input type="text" id="huo_name' + idx + '" value="' + defaultName.replace(/"/g,'&quot;') + '" placeholder="姓名"></div>';
+    html += '<div class="field-group"><label>标准（默认100）</label><input type="number" id="huo_standr' + idx + '" value="' + (d.standr || 100) + '" min="0"></div>';
+    html += '</div>';
+
+    // 途中
+    html += '<div class="huo-slot">';
+    html += '<div>途中</div>';
+    html += renderHuoTimeSlot(idx, 'tuzhong', td.tuzhong);
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>天数</label><input type="number" id="huo_tuzhong_day' + idx + '" value="' + getHuoSlotDay(td.tuzhong) + '" min="0" readonly></div>';
+    html += '<div class="field-group"><label>申报金额</label><input type="number" id="huo_tuzhong_shen' + idx + '" value="' + (getHuoSlotDay(td.tuzhong) * (parseFloat(d.standr || 100) || 100)) + '" min="0" readonly></div>';
+    html += '</div></div>';
+
+    // 住勤
+    html += '<div class="huo-slot">';
+    html += '<div>住勤</div>';
+    html += renderHuoTimeSlot(idx, 'zhqin', td.zhqin);
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>天数</label><input type="number" id="huo_zhqin_day' + idx + '" value="' + getHuoSlotDay(td.zhqin) + '" min="0" readonly></div>';
+    html += '<div class="field-group"><label>申报金额</label><input type="number" id="huo_zhqin_shen' + idx + '" value="' + (getHuoSlotDay(td.zhqin) * (parseFloat(d.standr || 100) || 100)) + '" min="0" readonly></div>';
+    html += '</div></div>';
+
+	    // 合计申报金额已隐藏
+	    html += '</div>';
+	  }
+  container.innerHTML = html;
+  for (var i = 0; i < huoPersonCount; i++) {
+    var idx = i + 1;
+    var td = huoTimeData[idx] || {};
+    if (td.zhqin) renderSlotIndividualTags(idx, 'zhqin');
+    if (td.tuzhong) renderSlotIndividualTags(idx, 'tuzhong');
+  }
+}
+
+function renderHuoTimeSlot(idx, slot, data) {
+  if (!data) data = { mode: 'continuous', start: null, end: null, dates: [] };
+  // 住勤默认连续日期，途中默认单独日期
+  var isContinuous = data.mode === 'continuous';
+  var isZhqin = slot === 'zhqin';
+  var html = '';
+  if (isZhqin) {
+    // 住勤 - 连续日期
+    html += '<div id="huo_' + slot + '_continuous_group' + idx + '">';
+    html += '<div class="inline-group">';
+    html += '<span style="font-size:13px">从</span><input type="date" id="huo_' + slot + '_start' + idx + '" style="width:160px" value="' + (data.start || '') + '" onchange="setHuoSlotDate(' + idx + ',\'' + slot + '\')">';
+    html += '<span style="font-size:13px">至</span><input type="date" id="huo_' + slot + '_end' + idx + '" style="width:160px" value="' + (data.end || '') + '" onchange="setHuoSlotDate(' + idx + ',\'' + slot + '\')">';
+    html += '</div>';
+    html += '</div>';
+  } else {
+    // 途中 - 单独日期
+    html += '<div id="huo_' + slot + '_individual_group' + idx + '">';
+    html += '<div class="inline-group">';
+    html += '<input type="date" id="huo_' + slot + '_input' + idx + '" style="width:160px">';
+    html += '<button class="btn-add" onclick="addHuoSlotDate(' + idx + ',\'' + slot + '\')" style="padding:4px 12px;font-size:13px">+ 添加</button>';
+    html += '</div>';
+    html += '<div id="huo_' + slot + '_tags' + idx + '"></div>';
+    html += '</div>';
+  }
+  return html;
+}
+
+function getHuoSlotText(startISO, endISO) {
+  var sd = new Date(startISO + 'T00:00:00');
+  var ed = new Date(endISO + 'T00:00:00');
+  return (sd.getFullYear() % 100) + '年' + (sd.getMonth() + 1) + '月' + sd.getDate() + '日' + '至' + (ed.getFullYear() % 100) + '年' + (ed.getMonth() + 1) + '月' + ed.getDate() + '日';
+}
+
+function getHuoSlotTimeText(idx, slot) {
+  var td = huoTimeData[idx];
+  if (!td || !td[slot]) return '';
+  var data = td[slot];
+  if (data.mode === 'continuous' && data.start && data.end) {
+    var sd = new Date(data.start + 'T00:00:00');
+    var ed = new Date(data.end + 'T00:00:00');
+    return (sd.getFullYear() % 100) + '年' + (sd.getMonth() + 1) + '月' + sd.getDate() + '日' + '至' + (ed.getFullYear() % 100) + '年' + (ed.getMonth() + 1) + '月' + ed.getDate() + '日';
+  } else if (data.mode === 'individual') {
+    return (data.dates || []).map(function(d) { return d.text; }).join('、');
+  }
+  return '';
+}
+
+function getHuoSlotDay(data) {
+  if (!data) return 0;
+  if (data.mode === 'continuous' && data.start && data.end) {
+    var sd = new Date(data.start + 'T00:00:00');
+    var ed = new Date(data.end + 'T00:00:00');
+    var days = Math.floor((ed - sd) / (24 * 60 * 60 * 1000)) + 1;
+    return days < 0 ? 0 : days;
+  } else if (data.mode === 'individual') {
+    return (data.dates || []).length;
+  }
+  return 0;
+}
+
+function recalcHuoSlot(idx, slot) {
+  var td = huoTimeData[idx];
+  if (!td || !td[slot]) return;
+  var day = getHuoSlotDay(td[slot]);
+  var standr = parseFloat(document.getElementById('huo_standr' + idx)?.value) || 100;
+  var shen = day * standr;
+  var dayInput = document.getElementById('huo_' + slot + '_day' + idx);
+  if (dayInput) dayInput.value = day;
+  var shenInput = document.getElementById('huo_' + slot + '_shen' + idx);
+  if (shenInput) shenInput.value = shen;
+  var zhqinDay = getHuoSlotDay(td.zhqin);
+  var tuzhongDay = getHuoSlotDay(td.tuzhong);
+  var totalShen = zhqinDay * standr + tuzhongDay * standr;
+  var totalInput = document.getElementById('huo_shen' + idx);
+  if (totalInput) totalInput.value = totalShen;
+}
+
+function switchHuoSlotMode(idx, slot, mode) {
+  if (!huoTimeData[idx]) huoTimeData[idx] = { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'continuous', start: null, end: null, dates: [] } };
+  if (!huoTimeData[idx][slot]) huoTimeData[idx][slot] = { mode: 'continuous', start: null, end: null, dates: [] };
+  huoTimeData[idx][slot].mode = mode;
+  var contGroup = document.getElementById('huo_' + slot + '_continuous_group' + idx);
+  var indGroup = document.getElementById('huo_' + slot + '_individual_group' + idx);
+  if (mode === 'continuous') {
+    huoTimeData[idx][slot].dates = [];
+    if (contGroup) contGroup.classList.remove('hidden');
+    if (indGroup) indGroup.classList.add('hidden');
+  } else {
+    huoTimeData[idx][slot].start = null;
+    huoTimeData[idx][slot].end = null;
+    if (contGroup) contGroup.classList.add('hidden');
+    if (indGroup) indGroup.classList.remove('hidden');
+  }
+  recalcHuoSlot(idx, slot);
+}
+
+function setHuoSlotDate(idx, slot) {
+  var start = document.getElementById('huo_' + slot + '_start' + idx)?.value;
+  var end = document.getElementById('huo_' + slot + '_end' + idx)?.value;
+  if (!huoTimeData[idx]) huoTimeData[idx] = { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'continuous', start: null, end: null, dates: [] } };
+  if (!huoTimeData[idx][slot]) huoTimeData[idx][slot] = { mode: 'continuous', start: null, end: null, dates: [] };
+  huoTimeData[idx][slot].start = start || null;
+  huoTimeData[idx][slot].end = end || null;
+  var display = document.getElementById('huo_' + slot + '_display' + idx);
+  if (display) {
+    if (start && end) {
+      display.textContent = getHuoSlotText(start, end);
+    } else {
+      display.textContent = '';
+    }
+  }
+  recalcHuoSlot(idx, slot);
+}
+
+function addHuoSlotDate(idx, slot) {
+  var input = document.getElementById('huo_' + slot + '_input' + idx);
+  if (!input || !input.value) return;
+  var dateISO = input.value;
+  var d = new Date(dateISO + 'T00:00:00');
+  var key = dateISO;
+  var text = (d.getFullYear() % 100) + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  if (!huoTimeData[idx]) huoTimeData[idx] = { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'continuous', start: null, end: null, dates: [] } };
+  if (!huoTimeData[idx][slot]) huoTimeData[idx][slot] = { mode: 'individual', start: null, end: null, dates: [] };
+  if (huoTimeData[idx][slot].dates.some(function(item) { return item.key === key; })) {
+    input.value = '';
+    return;
+  }
+  huoTimeData[idx][slot].dates.push({ key: key, text: text });
+  input.value = '';
+  renderSlotIndividualTags(idx, slot);
+  recalcHuoSlot(idx, slot);
+}
+
+function delHuoSlotDate(idx, slot, dateIdx) {
+  if (huoTimeData[idx] && huoTimeData[idx][slot] && huoTimeData[idx][slot].dates) {
+    huoTimeData[idx][slot].dates.splice(dateIdx, 1);
+  }
+  renderSlotIndividualTags(idx, slot);
+  recalcHuoSlot(idx, slot);
+}
+
+function renderSlotIndividualTags(idx, slot) {
+  var container = document.getElementById('huo_' + slot + '_tags' + idx);
+  if (!container) return;
+  var data = (huoTimeData[idx] && huoTimeData[idx][slot] && huoTimeData[idx][slot].dates) || [];
+  var html = '';
+  data.forEach(function(d, i) {
+    html += '<span class="date-tag">' + d.text + '<span class="del" onclick="delHuoSlotDate(' + idx + ',\'' + slot + '\',' + i + ')">×</span></span>';
+  });
+  container.innerHTML = html;
+}
+
+function addHuoPerson() {
+  if (huoPersonCount >= 30) { alert('最多30人'); return; }
+  var saved = getHuoPersonData();
+  huoPersonCount++;
+  if (!huoTimeData[huoPersonCount]) {
+    huoTimeData[huoPersonCount] = { zhqin: { mode: 'continuous', start: null, end: null, dates: [] }, tuzhong: { mode: 'individual', start: null, end: null, dates: [] } };
+  }
+  renderHuoPeople(saved);
+}
+function delHuoPerson(idx) {
+  var saved = getHuoPersonData();
+  saved.splice(idx, 1);
+  var newData = {};
+  var keys = Object.keys(huoTimeData).sort(function(a,b) { return parseInt(a) - parseInt(b); });
+  for (var i = 0; i < keys.length; i++) {
+    if (parseInt(keys[i]) <= idx + 1) {
+      if (parseInt(keys[i]) !== idx + 1) newData[keys[i]] = huoTimeData[keys[i]];
+    } else {
+      newData[parseInt(keys[i]) - 1] = huoTimeData[keys[i]];
+    }
+  }
+  huoTimeData = newData;
+  huoPersonCount--;
+  renderHuoPeople();
+}
+function syncHuoAndChaoPeople() {
+  renderHuoPeople();
+  renderChaoPeople();
+}
+
+// ========== 超标准审批单 ==========// ========== 超标准审批单 ==========
+var chaoPersonCount = 1;
+function renderChaoPeople() {
+  var container = document.getElementById('chao_people_container');
+  var html = '';
+  for (var i = 0; i < chaoPersonCount; i++) {
+    var idx = i + 1;
+    // Try to match name from yingong
+    var yinName = document.getElementById('yin_name' + idx);
+    var yinZhiji = document.getElementById('yin_zhiji' + idx);
+    var yinBuzhibie = document.getElementById('yin_buzhibie' + idx);
+    var defaultName = yinName ? yinName.value : '';
+    var defaultZhiji = yinZhiji ? yinZhiji.value : '';
+    var defaultBubie = yinBuzhibie ? yinBuzhibie.value : '';
+
+    html += '<div class="person-card">';
+    html += '<div class="person-title">人员 ' + idx + (idx > 1 ? '<button class="btn-del" onclick="delChaoPerson(' + i + ')">删除</button>' : '') + '</div>';
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>姓名</label><input type="text" id="chao_name' + idx + '" value="' + defaultName.replace(/"/g,'&quot;') + '" onchange="syncChaoDefaults(' + idx + ')" placeholder="姓名"></div>';
+    html += '<div class="field-group"><label>职级</label><input type="text" id="chao_zhiji' + idx + '" value="' + defaultZhiji.replace(/"/g,'&quot;') + '" placeholder="职级"></div>';
+    html += '<div class="field-group"><label>部别</label><input type="text" id="chao_bubie' + idx + '" value="' + defaultBubie.replace(/"/g,'&quot;') + '" placeholder="部别"></div>';
+    html += '</div>';
+    html += '<div class="field-group"><label>何时到何地</label><input type="text" id="chao_time_to_point' + idx + '"></div>';
+    html += '<div class="field-row">';
+    html += '<div class="field-group"><label>应当乘坐交通工具席位</label><input type="text" id="chao_yingcheng' + idx + '"></div>';
+    html += '<div class="field-group"><label>实际乘坐交通工具席位</label><input type="text" id="chao_shicheng' + idx + '"></div>';
+    html += '</div>';
+    html += '<div class="field-group"><label>超标准乘坐交通工具原因</label><textarea id="chao_yuanyin' + idx + '" rows="3"></textarea></div>';
+    html += '<div class="field-group"><label>备注</label><textarea id="chao_bei' + idx + '" rows="2"></textarea></div>';
+    html += '</div>';
+	  }
+	  container.innerHTML = html;
+	  renderBaoSelects();
+	}
+	function addChaoPerson() {
+  chaoPersonCount++;
+  renderChaoPeople();
+}
+function delChaoPerson(idx) {
+  chaoPersonCount--;
+  renderChaoPeople();
+}
+function syncChaoDefaults(idx) {
+  var name = document.getElementById('chao_name' + idx)?.value || '';
+  if (!name) return;
+  // Try to find matching name in yingong
+  for (var i = 1; i <= yinPersonCount; i++) {
+    var yinName = document.getElementById('yin_name' + i)?.value || '';
+    if (yinName === name) {
+      var zhiji = document.getElementById('yin_zhiji' + i)?.value || '';
+      var buzhibie = document.getElementById('yin_buzhibie' + i)?.value || '';
+      if (zhiji) document.getElementById('chao_zhiji' + idx).value = zhiji;
+      if (buzhibie) document.getElementById('chao_bubie' + idx).value = buzhibie;
+      break;
+    }
+  }
+}
+
+function syncDanwei() {
+	  var yinVal = document.getElementById('yin_danwei')?.value || '';
+	  var baoVal = document.getElementById('bao_danwei')?.value || '';
+	  // Sync both ways
+	  if (document.activeElement === document.getElementById('yin_danwei')) {
+	    document.getElementById('bao_danwei').value = yinVal;
+	  } else if (document.activeElement === document.getElementById('bao_danwei')) {
+	    document.getElementById('yin_danwei').value = baoVal;
+	  }
+	}
+	
+	function syncArrivePoint() {
+  // 收集所有到达地点，用"、"隔开
+  var points = [];
+  var i = 1;
+  while (document.getElementById('yin_arrive_didian_' + i)) {
+    var val = document.getElementById('yin_arrive_didian_' + i)?.value || '';
+    if (val) points.push(val);
+    i++;
+  }
+  var combined = points.join('、');
+  var baoArrive = document.getElementById('bao_arrive_point');
+  if (baoArrive && !baoArrive.dataset.manual) {
+    baoArrive.value = combined;
+  }
+}
+
+// ========== 到达单位/到达地点 多组管理 ==========
+var arriveGroupCount = 1;
+
+function renderArriveGroup() {
+  var container = document.getElementById('arrive_group_list');
+  if (!container) return;
+  var html = '';
+  for (var i = 1; i <= arriveGroupCount; i++) {
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    html += '<span style="font-size:12px;color:#666;min-width:60px">第' + i + '组</span>';
+    html += '<input type="text" id="yin_arrive_danwei_' + i + '" placeholder="到达单位" style="flex:1;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px">';
+    html += '<input type="text" id="yin_arrive_didian_' + i + '" placeholder="到达地点" style="flex:1;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:13px" onchange="syncArrivePoint()">';
+    if (i > 1) {
+      html += '<button type="button" onclick="delArriveGroup(' + i + ')" style="padding:4px 8px;font-size:12px;background:#fff;color:#e74c3c;border:1px solid #e74c3c;border-radius:4px;cursor:pointer">×</button>';
+    } else {
+      html += '<span style="width:28px"></span>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function addArriveGroup() {
+  var saved = {};
+  for (var i = 1; i <= arriveGroupCount; i++) {
+    saved['danwei_' + i] = document.getElementById('yin_arrive_danwei_' + i)?.value || '';
+    saved['didian_' + i] = document.getElementById('yin_arrive_didian_' + i)?.value || '';
+  }
+  arriveGroupCount++;
+  renderArriveGroup();
+  // 恢复已保存的值
+  for (var i = 1; i <= arriveGroupCount; i++) {
+    var dwEl = document.getElementById('yin_arrive_danwei_' + i);
+    var ddEl = document.getElementById('yin_arrive_didian_' + i);
+    if (dwEl) dwEl.value = saved['danwei_' + i] || '';
+    if (ddEl) ddEl.value = saved['didian_' + i] || '';
+  }
+  syncArrivePoint();
+}
+
+function delArriveGroup(idx) {
+  // 保存当前所有值
+  var saved = {};
+  for (var i = 1; i <= arriveGroupCount; i++) {
+    if (i === idx) continue;
+    saved['danwei_' + i] = document.getElementById('yin_arrive_danwei_' + i)?.value || '';
+    saved['didian_' + i] = document.getElementById('yin_arrive_didian_' + i)?.value || '';
+  }
+  arriveGroupCount--;
+  renderArriveGroup();
+  // 恢复剩余组的值
+  var pos = 1;
+  for (var i = 1; i <= arriveGroupCount + 1; i++) {
+    if (i === idx) continue;
+    var dwEl = document.getElementById('yin_arrive_danwei_' + pos);
+    var ddEl = document.getElementById('yin_arrive_didian_' + pos);
+    if (dwEl) dwEl.value = saved['danwei_' + i] || '';
+    if (ddEl) ddEl.value = saved['didian_' + i] || '';
+    pos++;
+  }
+  syncArrivePoint();
+}
+		
+		
+function syncBaoxiaoSums() {
+  var cc = parseFloat(document.getElementById('bao_carship_count')?.value) || 0;
+  var ac = parseFloat(document.getElementById('bao_airport_count')?.value) || 0;
+  var tc = parseFloat(document.getElementById('bao_tuigai_count')?.value) || 0;
+  document.getElementById('bao_count_sum').value = cc + ac + tc;
+
+  var cv = parseFloat(document.getElementById('bao_carship_value')?.value) || 0;
+  var av = parseFloat(document.getElementById('bao_airport_value')?.value) || 0;
+  var tv = parseFloat(document.getElementById('bao_tuigai_value')?.value) || 0;
+  document.getElementById('bao_value_sum').value = cv + av + tv;
+
+  // 自动计算申报金额总和（可手动修改）
+  var ss = parseFloat(document.getElementById('bao_shinei_sum')?.value) || 0;
+  var tv2 = parseFloat(document.getElementById('bao_tuoyun_sum')?.value) || 0;
+  var fs = parseFloat(document.getElementById('bao_food_sum')?.value) || 0;
+  var sum_shen = parseFloat(document.getElementById('bao_sum_shen')?.value) || 0;
+  var ji_shen = parseFloat(document.getElementById('bao_ji_shen')?.value) || 0;
+  var total = cv + av + tv + ss + tv2 + fs + sum_shen + ji_shen;
+
+  var sbInput = document.getElementById('bao_shenbao_sum');
+  // 如果用户没手动修改过（或者用户允许覆盖），才更新总和
+  if (sbInput && !sbInput.dataset.manual) {
+    sbInput.value = total > 0 ? total : '';
+  }
+  syncShenbaoHezhun();
+}
+
+function renderBaoSelects() {
+  var nameSelect = document.getElementById('bao_name');
+  var buzhibieSelect = document.getElementById('bao_buzhibie');
+  if (!nameSelect || !buzhibieSelect) return;
+
+  var savedName = nameSelect.value;
+  var savedBuzhibie = buzhibieSelect.value;
+
+  // Collect all yin person names and buzhibies
+  var nameOptions = ['<option value="">请选择</option>'];
+  var buzhibieOptions = ['<option value="">请选择</option>'];
+  var nameMap = {};  // name -> first matching buzhibie
+  var seenNames = {}, seenBuzhibies = {};
+  for (var i = 0; i < yinPersonCount; i++) {
+    var idx = i + 1;
+    var name = document.getElementById('yin_name' + idx)?.value || '';
+    var buzhibie = document.getElementById('yin_buzhibie' + idx)?.value || '';
+    if (name && !seenNames[name]) {
+      seenNames[name] = true;
+      nameOptions.push('<option value="' + name.replace(/"/g, '&quot;') + '">' + name + '</option>');
+    }
+    if (name && !nameMap[name]) {
+      nameMap[name] = buzhibie;
+    }
+    if (buzhibie && !seenBuzhibies[buzhibie]) {
+      seenBuzhibies[buzhibie] = true;
+      buzhibieOptions.push('<option value="' + buzhibie.replace(/"/g, '&quot;') + '">' + buzhibie + '</option>');
+    }
+  }
+  // Store nameMap for onBaoNameChange to use
+  nameSelect._nameMap = nameMap;
+
+  nameSelect.innerHTML = nameOptions.join('');
+  if (savedName) nameSelect.value = savedName;
+
+  buzhibieSelect.innerHTML = buzhibieOptions.join('');
+  if (savedBuzhibie) buzhibieSelect.value = savedBuzhibie;
+
+  // 同步部职别（状态恢复时也触发）
+  onBaoNameChange();
+}
+
+function onBaoNameChange() {
+  var nameSelect = document.getElementById('bao_name');
+  var buzhibieSelect = document.getElementById('bao_buzhibie');
+  if (!nameSelect || !buzhibieSelect) return;
+  var name = nameSelect.value;
+  var buzhibie = '';
+  if (name && nameSelect._nameMap && nameSelect._nameMap[name]) {
+    buzhibie = nameSelect._nameMap[name];
+  }
+  // Find the option in buzhibie dropdown, add if not exists
+  var existing = buzhibieSelect.querySelector('option[value="' + buzhibie.replace(/"/g, '&quot;') + '"]');
+  if (existing) {
+    buzhibieSelect.value = buzhibie;
+  } else if (buzhibie) {
+    // Add new option
+    var opt = document.createElement('option');
+    opt.value = buzhibie;
+    opt.textContent = buzhibie;
+    buzhibieSelect.appendChild(opt);
+    buzhibieSelect.value = buzhibie;
+  } else {
+    buzhibieSelect.value = '';
+  }
+}
+
+function syncSumTime() {
+  var display = document.getElementById('bao_sum_display');
+  var fromVal = document.getElementById('bao_sum_from')?.value || '';
+  var toVal = document.getElementById('bao_sum_to')?.value || '';
+  if (!fromVal || !toVal) { display.textContent = ''; return; }
+  try {
+    var f = fromVal.split('-');
+    var t = toVal.split('-');
+    var fDate = parseInt(f[0]) + '年' + parseInt(f[1]) + '月' + parseInt(f[2]) + '日';
+    var tDate = parseInt(t[0]) + '年' + parseInt(t[1]) + '月' + parseInt(t[2]) + '日';
+    var d1 = new Date(parseInt(f[0]), parseInt(f[1]) - 1, parseInt(f[2]));
+    var d2 = new Date(parseInt(t[0]), parseInt(t[1]) - 1, parseInt(t[2]));
+    var days = Math.floor((d2 - d1) / (86400000)) + 1;
+    display.textContent = '→ ' + fDate + '至' + tDate + '，共' + days + '天';
+  } catch(e) {
+    display.textContent = '';
+  }
+}
+
+function syncQizhiTime() {
+  var display = document.getElementById('yin_qizhi_display');
+  var fromVal = document.getElementById('yin_qizhi_from')?.value || '';
+  var toVal = document.getElementById('yin_qizhi_to')?.value || '';
+  if (!fromVal || !toVal) { display.textContent = ''; return; }
+  try {
+    var f = fromVal.split('-');
+    var t = toVal.split('-');
+    var fDate = parseInt(f[0]) + '年' + parseInt(f[1]) + '月' + parseInt(f[2]) + '日';
+    var tDate = parseInt(t[0]) + '年' + parseInt(t[1]) + '月' + parseInt(t[2]) + '日';
+    var d1 = new Date(parseInt(f[0]), parseInt(f[1]) - 1, parseInt(f[2]));
+    var d2 = new Date(parseInt(t[0]), parseInt(t[1]) - 1, parseInt(t[2]));
+    var days = Math.floor((d2 - d1) / (86400000)) + 1;
+    display.textContent = '→ ' + fDate + '至' + tDate + '，共' + days + '天';
+
+    // 同步到差旅费报销凭证的出差日期
+    var baoFrom = document.getElementById('bao_sum_from');
+    var baoTo = document.getElementById('bao_sum_to');
+    if (baoFrom && !baoFrom.dataset.manual) baoFrom.value = fromVal;
+    if (baoTo && !baoTo.dataset.manual) baoTo.value = toVal;
+    syncSumTime();
+  } catch(e) {
+    display.textContent = '';
+  }
+}
+
+function syncChuxing() {
+  // No display needed, just update state
+}
+
+function numToChineseShenbao(n) {
+  var val = parseFloat(n) || 0;
+  var intPart = Math.floor(val);
+  var decPart = Math.round((val - intPart) * 100);
+  var digits = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+  var result = '';
+
+  if (intPart >= 100000) {
+    var shiwan = Math.floor(intPart / 100000);
+    var wan = Math.floor((intPart % 100000) / 10000);
+    var rest = intPart % 10000;
+    result += digits[shiwan] + '拾';
+    result += (wan > 0 ? digits[wan] + '万' : '万');
+    if (rest > 0) {
+      var q = Math.floor(rest / 1000);
+      var b = Math.floor((rest % 1000) / 100);
+      var sh = Math.floor((rest % 100) / 10);
+      var g = rest % 10;
+      if (q > 0) result += digits[q] + '仟';
+      else if (b > 0 || sh > 0 || g > 0) result += '零';
+      if (b > 0) result += digits[b] + '佰';
+      else if (q > 0 && (sh > 0 || g > 0)) result += '零';
+      if (sh > 0) result += digits[sh] + '拾';
+      else if ((q > 0 || b > 0) && g > 0) result += '零';
+      result += digits[g] + '元';
+    } else {
+      result += '零元';
+    }
+  } else if (intPart >= 10000) {
+    var wan = Math.floor(intPart / 10000);
+    var rest = intPart % 10000;
+    result += digits[wan] + '万';
+    if (rest > 0) {
+      var q = Math.floor(rest / 1000);
+      var b = Math.floor((rest % 1000) / 100);
+      var sh = Math.floor((rest % 100) / 10);
+      var g = rest % 10;
+      if (q > 0) result += digits[q] + '仟';
+      else if (b > 0 || sh > 0 || g > 0) result += '零';
+      if (b > 0) result += digits[b] + '佰';
+      else if (q > 0 && (sh > 0 || g > 0)) result += '零';
+      if (sh > 0) result += digits[sh] + '拾';
+      else if ((q > 0 || b > 0) && g > 0) result += '零';
+      result += digits[g] + '元';
+    } else {
+      result += '零元';
+    }
+  } else if (intPart > 0) {
+    var q = Math.floor(intPart / 1000);
+    var b = Math.floor((intPart % 1000) / 100);
+    var sh = Math.floor((intPart % 100) / 10);
+    var g = intPart % 10;
+    if (q > 0) result += digits[q] + '仟';
+    if (b > 0) result += digits[b] + '佰';
+    else if (q > 0 && (sh > 0 || g > 0)) result += '零';
+    if (sh > 0) result += digits[sh] + '拾';
+    else if (b > 0 && g > 0) result += '零';
+    if (g > 0) result += digits[g] + '元';
+    else if (q > 0 || b > 0 || sh > 0) result += '元';
+  } else {
+    result += '零元';
+  }
+
+  var jiao = Math.floor(decPart / 10);
+  var fen = decPart % 10;
+  result += (jiao > 0 ? digits[jiao] + '角' : '零角');
+  result += (fen > 0 ? digits[fen] + '分' : '零分');
+  result += '(¥：' + val.toFixed(2) + ')';
+  return result;
+}
+
+function syncShenbaoHezhun() {
+  var sb = parseFloat(document.getElementById('bao_shenbao_sum')?.value) || 0;
+  var display = document.getElementById('bao_shenbao_display');
+  if (sb > 0) {
+    display.textContent = '→ ' + numToChineseShenbao(sb);
+  } else {
+    display.textContent = '';
+  }
+}
+
+function syncJiShen() {
+  var p = parseFloat(document.getElementById('bao_ji_p')?.value) || 0;
+  var d = parseFloat(document.getElementById('bao_ji_d')?.value) || 0;
+  var s = parseFloat(document.getElementById('bao_ji_s')?.value) || 0;
+  document.getElementById('bao_ji_shen').value = p * d * s;
+  syncBaoxiaoSums();
+}
+
+// 住宿费表格
+function renderZhusuTable() {
+  var levels = [
+    { key: 'sheng', label: '省级以上' },
+    { key: 'shi', label: '市级' },
+    { key: 'xian', label: '县级' },
+    { key: 'qi', label: '其他人员' },
+    { key: 'sum', label: '小计' }
+  ];
+  var html = '';
+  levels.forEach(function(lv) {
+    var isSum = lv.key === 'sum';
+    html += '<tr>';
+    html += '<td>' + lv.label + '</td>';
+    html += '<td><input type="number" id="bao_' + lv.key + '_p" min="0" ' + (isSum ? 'readonly' : 'onchange="syncZhusu()"') + '></td>';
+    html += '<td><input type="number" id="bao_' + lv.key + '_d" min="0" ' + (isSum ? 'readonly' : 'onchange="syncZhusu()"') + '></td>';
+    html += '<td><input type="number" id="bao_' + lv.key + '_s" min="0" ' + (isSum ? 'readonly' : 'onchange="syncZhusu()"') + '></td>';
+    html += '<td><input type="text" id="bao_' + lv.key + '_shen" readonly></td>';
+    html += '</tr>';
+  });
+  document.getElementById('zhusu_table_body').innerHTML = html;
+}
+
+function syncZhusu() {
+  var keys = ['sheng', 'shi', 'xian', 'qi'];
+  var sum_p = 0, sum_d = 0, sum_shen = 0;
+  keys.forEach(function(k) {
+    var p = parseFloat(document.getElementById('bao_' + k + '_p')?.value) || 0;
+    var d = parseFloat(document.getElementById('bao_' + k + '_d')?.value) || 0;
+    var s_input = parseFloat(document.getElementById('bao_' + k + '_s')?.value) || 0;
+    var shen = p * d * s_input;
+    document.getElementById('bao_' + k + '_shen').value = shen > 0 ? shen : '';
+    sum_p += p;
+    sum_d += d;
+    sum_shen += shen;
+  });
+  document.getElementById('bao_sum_p').value = sum_p > 0 ? sum_p : '';
+  document.getElementById('bao_sum_d').value = sum_d > 0 ? sum_d : '';
+  document.getElementById('bao_sum_s').value = '';  // 小计标准取消累加，默认为空
+  document.getElementById('bao_sum_shen').value = sum_shen > 0 ? sum_shen : '';
+  syncBaoxiaoSums();
+}
+
+// ========== 初始化日期 ==========
+function initDates() {
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+  renderDateSelect('yin_time_group', y, m, d, 'syncAllDates(\'yin_time_group\')');
+  renderDateSelect('huo_time_group', y, m, d, 'syncAllDates(\'huo_time_group\')');
+  renderDateSelect('chao_time_group', y, m, d, 'syncAllDates(\'chao_time_group\')');
+  renderDateSelect('bao_time_group', y, m, d, 'syncAllDates(\'bao_time_group\')');
+}
+
+// ========== 导出逻辑（后端 API） ==========
+/**
+ * 收集所有表单数据，发送到后端生成 Excel
+ * 所有 Excel 操作由 Python 后端处理，前端仅负责浏览页面
+ */
+function collectFormData() {
+  var data = {};
+  // 收集所有带 ID 的 input/select/textarea 的值
+  var inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(function(el) {
+    if (el.id) {
+      if (el.type === 'checkbox') {
+        data[el.id] = el.checked ? 'true' : 'false';
+      } else {
+        data[el.id] = el.value;
+      }
+    }
+  });
+  // 添加人员计数
+  data.yinPersonCount = String(yinPersonCount);
+  data.huoPersonCount = String(huoPersonCount);
+  data.chaoPersonCount = String(chaoPersonCount);
+  data.arriveGroupCount = String(arriveGroupCount);
+  // 添加伙食补助时间数据（JSON 序列化）
+  data.huoTimeData = JSON.stringify(huoTimeData);
+  return data;
+}
+
+function downloadExcel() {
+  // 收集选中的表单
+  var selectedForms = [];
+  document.querySelectorAll('.form-card:first-child .checkbox-group input[type=checkbox]').forEach(function(cb) {
+    if (cb.checked) selectedForms.push(cb.value);
+  });
+  if (selectedForms.length === 0) { alert('请至少选择一个表格。'); return; }
+
+  // 保存表单状态，供返回时恢复
+  saveFormState();
+
+  // 收集所有表单数据
+  var formData = collectFormData();
+
+  // 发送到后端 API
+  fetch('/api/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selectedForms: selectedForms, formData: formData })
+  })
+  .then(function(response) {
+    if (!response.ok) {
+      return response.json().then(function(err) { throw new Error(err.error || '导出失败'); });
+    }
+    // 从 Content-Disposition 解析文件名
+    var disposition = response.headers.get('Content-Disposition') || '';
+    var filename = '财务报销.zip';
+    var match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+    if (match) filename = match[1].replace(/['"]/g, '');
+    return response.blob().then(function(blob) { return { blob: blob, filename: filename }; });
+  })
+  .then(function(result) {
+    // 触发下载
+    var url = URL.createObjectURL(result.blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = result.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  })
+  .catch(function(err) {
+    alert('导出失败：' + (err.message || err));
+  });
+}
+
+
+// ========== 状态持久化（localStorage） ==========
+function saveFormState() {
+  var state = { _yin: yinPersonCount, _huo: huoPersonCount, _chao: chaoPersonCount, _arrive: arriveGroupCount, _huoTime: JSON.stringify(huoTimeData) };
+  var inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(function(el) {
+    if (el.id) {
+      if (el.type === 'checkbox') state[el.id] = el.checked;
+      else state[el.id] = el.value;
+    }
+  });
+  localStorage.setItem('financeFormState', JSON.stringify(state));
+}
+
+function restoreFormState() {
+  var saved = localStorage.getItem('financeFormState');
+  if (!saved) return;
+  try {
+    var state = JSON.parse(saved);
+    // Restore state variables
+    if (state._yin) yinPersonCount = parseInt(state._yin);
+    if (state._huo) huoPersonCount = parseInt(state._huo);
+    if (state._chao) chaoPersonCount = parseInt(state._chao);
+    if (state._arrive) arriveGroupCount = parseInt(state._arrive);
+    else arriveGroupCount = 1;
+    if (state._huoTime) huoTimeData = JSON.parse(state._huoTime);
+    // Re-render dynamic content with saved data
+    renderArriveGroup();
+    renderYinPeople();
+    renderHuoPeople();
+    renderChaoPeople();
+    renderZhusuTable();
+    // Restore all input values
+    Object.keys(state).forEach(function(key) {
+      if (key.startsWith('_')) return;
+      var el = document.getElementById(key);
+      if (el) {
+        if (el.type === 'checkbox') el.checked = state[key];
+        else el.value = state[key];
+      }
+    });
+    // 同步起止时间到出差日期
+    syncQizhiTime();
+    // 同步到达地点到差旅费报销凭证
+    syncArrivePoint();
+    // Restore step
+    var savedStep = localStorage.getItem('financeCurrentStep');
+    if (savedStep !== null) {
+      currentStep = parseInt(savedStep);
+      if (currentStep >= STEPS.length) currentStep = 0;
+    }
+  } catch(e) { /* ignore */ }
+  showStep(currentStep);
+  updateHuoNextButton();
+}
+
+// ========== 负数校验 ==========
+document.getElementById('app').addEventListener('input', function(e) {
+  if (e.target.tagName === 'INPUT' && e.target.type === 'number' && e.target.value !== '') {
+    var val = parseFloat(e.target.value);
+    if (val < 0) {
+      e.target.value = '';
+      showNegTip(e.target);
+    }
+  }
+});
+function showNegTip(el) {
+  var parent = el.closest('.field-group') || el.parentElement;
+  if (parent.querySelector('.neg-tip')) return;
+  var tip = document.createElement('div');
+  tip.className = 'neg-tip';
+  tip.textContent = '不得输入为负数';
+  parent.appendChild(tip);
+  setTimeout(function() { tip.remove(); }, 1500);
+}
+
+// ========== 初始化 ==========
+renderArriveGroup();
+renderYinPeople();
+renderHuoPeople();
+renderChaoPeople();
+renderZhusuTable();
+initDates();
+// 从贴票助手返回时恢复状态，首次打开则清空记录
+if (sessionStorage.getItem('returnFromTiepiao')) {
+  restoreFormState();
+  sessionStorage.removeItem('returnFromTiepiao');
+} else {
+  localStorage.removeItem('financeFormState');
+}
+// 初始化导航步骤
+		showStep(currentStep);
+		updateHuoNextButton();
+		renderBaoSelects();
+		</script>
+
+</body></html>
