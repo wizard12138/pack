@@ -1,0 +1,53 @@
+name: Build Kylin ARM64
+
+# 触发：手动（Actions → Run workflow）或打 tag（v*）自动触发并发布 Release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-kylin-arm64:
+    name: Kylin ARM64 (glibc 2.28)
+    runs-on: ubuntu-22.04-arm
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 确认架构为 aarch64
+        run: uname -m
+
+      - name: 在 Rocky Linux 8 (aarch64, glibc 2.28) 容器中构建
+        env:
+          PYTHONUTF8: '1'
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/src \
+            -w /src \
+            -e PYTHONUTF8=1 \
+            rockylinux:8 \
+            bash scripts/build_in_container.sh
+
+      - name: 打包
+        run: |
+          cd dist
+          tar czf ../finance-kylin-arm64.tar.gz 财务报销系统
+          cd ..
+          ls -lh finance-kylin-arm64.tar.gz
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-kylin-arm64
+          path: finance-kylin-arm64.tar.gz
+          if-no-files-found: error
+
+      - name: 发布到 Release（仅打 tag 时）
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: finance-kylin-arm64.tar.gz

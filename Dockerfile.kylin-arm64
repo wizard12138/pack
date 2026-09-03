@@ -1,0 +1,21 @@
+# 银河麒麟 ARM64 构建环境
+# 基线：Rocky Linux 8 (aarch64, glibc 2.28)
+# 目的：在低 glibc 基线上编译，保证产物可运行于 Kylin Server/Desktop V10 及 Ubuntu 20.04+ ARM64
+#
+# 本地复现构建（需 ARM64 主机，或 x86 主机配合 QEMU）：
+#   docker build -f Dockerfile.kylin-arm64 -t kylin-builder .
+#   docker run --rm -v "$PWD":/src -w /src -e PYTHONUTF8=1 kylin-builder
+#
+# 非 ARM64 主机请用 buildx 指定平台（较慢）：
+#   docker buildx build --platform linux/arm64 -f Dockerfile.kylin-arm64 -t kylin-builder --load .
+
+FROM rockylinux:8
+
+RUN dnf install -y python39 python39-devel gcc make tar gzip \
+    && (dnf install -y python39-pip || true) \
+    && dnf clean all
+
+ENV PYTHONUTF8=1
+WORKDIR /src
+
+CMD ["bash", "scripts/build_in_container.sh"]
