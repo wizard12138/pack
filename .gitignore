@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 虚拟环境
+.venv/
+venv/
+.build-venv/
+
+# PyInstaller 产物与中间文件（由 CI / 本地构建生成，不应入库）
+build/
+dist/
+*.spec.bak
+
+# Excel 临时锁文件
+~$*.xlsx
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
